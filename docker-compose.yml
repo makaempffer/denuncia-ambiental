@@ -3,29 +3,37 @@ services:
     image: postgis/postgis:16-3.4
     restart: always
     environment:
-      POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: denuncia_db
+      POSTGRES_PASSWORD: ${DB_PASS}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./data/seed:/docker-entrypoint-initdb.d
 
   api:
-    build:
-      context: ./backend # Points to the backend folder
-      dockerfile: Dockerfile
+    build: ./backend
     restart: always
+    environment:
+      DATABASE_URL: postgres://postgres:${DB_PASS}@db:5432/denuncia_db
     depends_on:
       - db
-    env_file: .env
-    ports:
-      - "3000:3000"
 
   map-server:
-    image: ghcr.io/protomaps/go-pmtiles:latest
-    command: serve /data
+    image: protomaps/go-pmtiles
+    restart: always
     volumes:
       - ./data/map:/data
+    command: serve /data
+
+  frontend:
+    build: ./frontend
+    restart: always
     ports:
-      - "8080:8080"
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+      - map-server
 
 volumes:
   postgres_data:
