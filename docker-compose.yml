@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: denuncia_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./backend # Points to the backend folder
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - db
+    env_file: .env
+    ports:
+      - "3000:3000"
+
+  map-server:
+    image: ghcr.io/protomaps/go-pmtiles:latest
+    command: serve /data
+    volumes:
+      - ./data/map:/data
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
