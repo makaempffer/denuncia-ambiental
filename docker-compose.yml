@@ -1,5 +1,4 @@
 services:
-  # 1. PostGIS Database
   db:
     image: postgis/postgis:16-3.4
     restart: always
@@ -15,19 +14,19 @@ services:
       timeout: 5s
       retries: 5
 
-  # 2. Go API Backend
   api:
     build: ./backend
     restart: always
+    # This loads everything in your .env (including HASH_SALT and PORT)
     env_file:
       - .env
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - HASH_SALT=${HASH_SALT}
     depends_on:
       db:
         condition: service_healthy
 
-  # 3. PMTiles Server (Protomaps)
   map-server:
     image: protomaps/go-pmtiles
     restart: always
@@ -35,7 +34,6 @@ services:
       - ./data/map:/data
     command: serve /data
 
-  # 4. React Frontend (Nginx Gateway)
   frontend:
     build: ./frontend
     restart: always
