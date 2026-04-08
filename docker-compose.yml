@@ -17,12 +17,10 @@ services:
   api:
     build: ./backend
     restart: always
-    # This loads everything in your .env (including HASH_SALT and PORT)
     env_file:
       - .env
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      - HASH_SALT=${HASH_SALT}
     depends_on:
       db:
         condition: service_healthy
@@ -39,13 +37,22 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
     depends_on:
-      api:
-        condition: service_started
-      map-server:
-        condition: service_started
+      - api
+      - map-server
+
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
   postgres_data:
