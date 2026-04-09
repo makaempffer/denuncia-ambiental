@@ -24,7 +24,9 @@ export default function App() {
   const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
   // Maps the PMTiles through the /tiles/ proxy path we set in nginx.conf
-  const MAP_URL = `pmtiles://${window.location.host}/tiles/chile.pmtiles`;
+  // When running locally in dev, fetch the heavy map directly from your VPS
+  const MAP_HOST = import.meta.env.DEV ? "denuncia-ambiental.devverse.win" : window.location.host;
+  const MAP_URL = `pmtiles://${MAP_HOST}/tiles/chile.pmtiles`;
 
   useEffect(() => {
     // Initialize PMTiles Protocol
