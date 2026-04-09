@@ -26,11 +26,10 @@ services:
         condition: service_healthy
 
   map-server:
-    image: protomaps/go-pmtiles
+    image: nginx:alpine
     restart: always
     volumes:
-      - ./data/map:/data
-    command: serve /data
+      - ./data/map:/usr/share/nginx/html:ro
 
   frontend:
     build: ./frontend
